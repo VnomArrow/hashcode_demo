@@ -1,5 +1,6 @@
 // Add parser
 use crate::vincent_code::*;
+use crate::lucas_code::*;
 
 use std::{collections::HashMap};
 
@@ -29,7 +30,7 @@ pub fn parser() -> Vec<Person> {
     let mut current_person: Person = Default::default();
     let mut hashmap: HashMap<String, usize> = Default::default();
     let mut counter: usize = 0;
-    for line in get_input!("input.in") {
+    for line in get_input!("./src/input.in") {
         if num == 0 {
             // Ignore first line
             num = 2;
@@ -53,5 +54,7 @@ pub fn parser() -> Vec<Person> {
         }
         num += 1;
     }
+
+    runner(&persons, counter);
     return persons;
 }
