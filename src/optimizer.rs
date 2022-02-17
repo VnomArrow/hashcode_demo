@@ -19,6 +19,42 @@ pub fn print_occurences(problem_name: &str) {
     for i in 0..occurance_spectrum.len() {
         println!("count {}: {}", i, occurance_spectrum[i]);
     }
+    println!("count_total: {}", preference_info.ingrediants.len());
+}
+
+// Old pizza cannot use more than subset
+pub fn best_subset_pizza(old_pizza: &Pizza, subset_in: &Vec<usize>, use_subset_size: usize, iter_count: usize, preference_info: &PizzaPreferenceInfo) -> Pizza {
+    let mut new_subset = subset_in.clone();
+    new_subset.resize(use_subset_size, 0);
+
+    let preference_subset = get_preference_info_from_subset(&new_subset, &preference_info);
+    let solver_subset = CustomerCounter::new(&preference_subset.persons, preference_subset.ingrediants.len());
+    let mut pizza_maker = PizzaMaker::new();
+
+    let mut best_pizza = Pizza::empty_pizza(new_subset.len());
+    let mut best_score = 0;
+    let mut pow2_counter: crate::util::BaseTwoCounter = Default::default();
+    for i in 0..iter_count {
+        pow2_counter.inc();
+        // Pick a random pizza
+        let mut pizza = pizza_maker.random_pizza(preference_subset.ingrediants.len());
+
+        // Set already preset ingrediants
+        for i in 0..old_pizza.ingrediants.len() {
+            pizza.ingrediants[i] = old_pizza.ingrediants[i];
+        }
+
+        // Optimize pizza
+        pizza = walk_first(&preference_subset, &pizza);
+        let score = solver_subset.pizza_person_count(&pizza, preference_info.persons.len());
+        if score > best_score {
+            println!("score: {}", score);
+            best_score = score;
+            best_pizza = pizza;
+        }
+    }
+
+    return best_pizza;
 }
 
 pub fn find_by_occurances_and_walking(problem_name: &str) {
@@ -30,17 +66,37 @@ pub fn find_by_occurances_and_walking(problem_name: &str) {
 
     // Create a subset where we only care about customers preferences of those ingredients
     let mut subset: Vec<usize> = vec!();
-    for i in 0..1000 {
+    for i in 0..occurance_list.len() {
         subset.push(occurance_list[i].index);
     }
 
-    let preference_subset = get_preference_info_from_subset(&subset, &preference_info);
-    let solver_subset = CustomerCounter::new(&preference_subset.persons, preference_subset.ingrediants.len());
+    let mut pizza = Pizza::empty_pizza(0);
+    //pizza = best_subset_pizza(&pizza, &subset, 100, 8000, &preference_info);
+    pizza = best_subset_pizza(&pizza, &subset, 80, 8000, &preference_info);
+    pizza = best_subset_pizza(&pizza, &subset, 150, 6000, &preference_info);
+    pizza = best_subset_pizza(&pizza, &subset, 230, 1000, &preference_info);
+    pizza = best_subset_pizza(&pizza, &subset, 400, 400, &preference_info);
+    pizza = best_subset_pizza(&pizza, &subset, 700, 400, &preference_info);
+    pizza = best_subset_pizza(&pizza, &subset, 1000, 200, &preference_info);
+    pizza = best_subset_pizza(&pizza, &subset, 2000, 40, &preference_info);
+    pizza = best_subset_pizza(&pizza, &subset, 4000, 10, &preference_info);
+    //pizza = best_subset_pizza(&pizza, &subset, 200, 50, &preference_info);
+    pizza = best_subset_pizza(&pizza, &subset, subset.len(), 10, &preference_info);
 
-    let mut best_pizza = Pizza::empty_pizza(subset.len());
+    let mut random_pizza = pizza_maker.random_pizza(preference_info.ingrediants.len());
+    for i in 0..pizza.ingrediants.len() {
+        random_pizza.ingrediants[subset[i]] = pizza.ingrediants[i];
+    }
+
+    let pizza = walk_first(&preference_info, &random_pizza);
+    let best_score = solver.pizza_person_count(&pizza, preference_info.persons.len());
+
+    pizza.save_to_file(best_score, ("./old/".to_string() + problem_name).as_str(), &preference_info.ingrediants);
+
+    /*let mut best_pizza = Pizza::empty_pizza(subset.len());
     let mut best_score = 0;
     let mut pow2_counter: crate::util::BaseTwoCounter = Default::default();
-    for i in 0..100 {
+    for i in 0..4000 {
         pow2_counter.inc();
         // Pick a random pizza
         let pizza = pizza_maker.random_pizza(preference_subset.ingrediants.len());
@@ -52,15 +108,16 @@ pub fn find_by_occurances_and_walking(problem_name: &str) {
         }
     }
 
+
+
     println!("{:?}", best_pizza.ingrediants.len());
 
-    for i in 0..20 {
+    for i in 0..100 {
         // Create a pizza using that info, and walk until we get the optimal pizza
         let random_pizza = pizza_maker.random_pizza_from_subset(&subset, &best_pizza, preference_info.ingrediants.len());
         let optimized_pizza = walk_first(&preference_info, &random_pizza);
         let best_score = solver.pizza_person_count(&optimized_pizza, preference_info.persons.len());
-        optimized_pizza.save_to_file(best_score, ("./old/".to_string() + problem_name).as_str(), &preference_info.ingrediants);
-    }
+    }*/
 }
 
 pub fn find_by_random(problem_name: &str) {
