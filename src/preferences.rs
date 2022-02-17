@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs::File;
+use crate::optimizer::Pizza;
 use crate::util::*;
 
 
@@ -120,4 +121,30 @@ pub fn parse_preference_info(file: &str) -> PizzaPreferenceInfo {
 pub struct Person {
     pub likes : Vec<usize>,
     pub dislikes : Vec<usize>,
+}
+
+// Just get a subset of the preferences and make it into a new set of preferences
+pub fn get_preference_info_from_subset(subset: &Vec<usize>, preferences: &PizzaPreferenceInfo) -> PizzaPreferenceInfo {
+    let mut new_preferences = PizzaPreferenceInfo::default();
+    new_preferences.persons.resize_with(preferences.persons.len(), Default::default);
+    for i in subset {
+        let i = *i;
+        let ingrediant_name = preferences.ingrediants[i].name.clone();
+        for person in preferences.ingrediants[i].liked_persons.iter() {
+            new_preferences.add_liked_ingrediant(ingrediant_name.as_str(), *person)
+        }
+        for person in preferences.ingrediants[i].disliked_persons.iter() {
+            new_preferences.add_disliked_ingrediant(ingrediant_name.as_str(), *person)
+        }
+    }
+    return new_preferences;
+}
+pub fn remake_pizza_from_subset(subset: &Vec<usize>, subset_preferences: &PizzaPreferenceInfo, origional_preferences: &PizzaPreferenceInfo, pizza: &Pizza) -> Pizza {
+    let mut new_pizza = Pizza::empty_pizza(origional_preferences.ingrediants.len());
+    for i in 0..subset.len() {
+        if pizza.ingrediants[i] == true {
+            new_pizza.ingrediants[subset[i]] = true;
+        }
+    }
+    return new_pizza;
 }

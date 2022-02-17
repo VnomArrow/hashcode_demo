@@ -1,16 +1,24 @@
 
 
+use optimizer::*;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 mod optimizer;
 mod util;
 mod preferences;
+mod algorithms;
 
 fn main() {
-    optimizer::find_by_random();
+    //print_occurences("e_elaborate");
+    //optimizer::find_by_random("e_elaborate");
+    println!("new iteration!");
+    //optimizer::find_by_walking("d_difficult");
     loop {
-        println!("new iteration!");
-        optimizer::find_by_walking();
+        find_by_occurances_and_walking("e_elaborate");
     }
-    println!("End");
+    /*loop {
+        println!("new iteration!");
+        optimizer::find_by_walking_v2("e_elaborate");
+    }
+    println!("End");*/
 }
